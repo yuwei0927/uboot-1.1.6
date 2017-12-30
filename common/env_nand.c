@@ -268,11 +268,25 @@ void env_relocate_spec (void)
 void env_relocate_spec (void)
 {
 #if !defined(ENV_IS_EMBEDDED)
-	ulong total;
+	ulong total = CFG_ENV_SIZE;
 	int ret;
 
-	total = CFG_ENV_SIZE;
+#ifdef CONFIG_SURPORT_WINCE
+    nand_read_options_t opts;
+    memset(&opts, 0, sizeof(opts));
+    
+    opts.buffer = (u_char*)env_ptr;
+    opts.length = total;
+    opts.offset = CFG_ENV_OFFSET;
+    opts.readoob = 0;
+    opts.quiet   = 1;
+    opts.noecc   = 1;
+    opts.nocheckbadblk = 1;
+    ret = nand_read_opts(&nand_info[0], &opts);
+
+#else
 	ret = nand_read(&nand_info[0], CFG_ENV_OFFSET, &total, (u_char*)env_ptr);
+#endif
   	if (ret || total != CFG_ENV_SIZE)
 		return use_default();
 
