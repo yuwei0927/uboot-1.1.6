@@ -344,6 +344,28 @@ void nand_read_ll(unsigned char *buf, unsigned long start_addr, int size)
     return ;
 }
 
+#if 0
+int bBootFrmNORFlash(void)
+{
+    volatile unsigned int *pdw = (volatile unsigned int *)0;
+    unsigned int dwVal;
+    
+    /*
+	无论是Nor boot还是nand boot ，这4K的内部SRAM都被映射到了0x40000000，而在nand boot的时候，这块内存同时还被映射到了0x00000000。
+	
+	在启动的时候，用程序将0x40000000～0x40001000中的某些位置清零，如果回读0x00000000～0x00001000中的相应位置后为零，说明是Nand boot，
+	如果是原来的数据（一定要选非零的位置）就是Nor boot。
+
+	那按照这个方案，我想到了解决的办法：
+	在启动的时候，直接读取0x0000003c位置的数据，如果回读的结果为0xdeadbeef，说明是nand boot,否则就是Nor boot。
+
+	待实现
+
+     */
+
+}
+
+#else
 int bBootFrmNORFlash(void)
 {
     volatile unsigned int *pdw = (volatile unsigned int *)0;
@@ -363,14 +385,15 @@ int bBootFrmNORFlash(void)
     *pdw = 0x12345678;
     if (*pdw != 0x12345678)
     {
-        return 1;
+        return 1;  //NOR Flash
     }
     else
     {
         *pdw = dwVal;
-        return 0;
+        return 0;   //NAND Flash
     }
 }
+#endif
 
 int CopyCode2Ram(unsigned long start_addr, unsigned char *buf, int size)
 {
@@ -429,7 +452,7 @@ void clock_init(void)
 	S3C24X0_CLOCK_POWER *clk_power = (S3C24X0_CLOCK_POWER *)0x4C000000;
 
     /* support both of S3C2410 and S3C2440, by www.arm9.net */
-    if ((GSTATUS1 == 0x32410000) || (GSTATUS1 == 0x32410002))
+    if ((GSTATUS1 == 0x32410000) || (GSTATUS1 == 0x32410002))  //S3C2410
     {
         /* FCLK:HCLK:PCLK = 1:2:4 */
         clk_power->CLKDIVN = S3C2410_CLKDIV;
@@ -456,7 +479,7 @@ void clock_init(void)
         /* some delay between MPLL and UPLL */
         delay (8000);
     }
-    else
+    else if (GSTATUS1 == 0x32440001)   //S3C2440
     {
         /* FCLK:HCLK:PCLK = 1:4:8 */
         clk_power->CLKDIVN = S3C2440_CLKDIV;

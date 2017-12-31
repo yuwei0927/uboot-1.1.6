@@ -176,7 +176,7 @@ reset:
 	str	r1, [r0]
 # endif
 
-#if 1
+#if 0    /*  设置时钟分频系数*/
 	/* FCLK:HCLK:PCLK = 1:2:4 */
 	/* default FCLK is 120 MHz ! */
 	ldr	r0, =CLKDIVN
@@ -185,7 +185,7 @@ reset:
 #endif
 #endif	/* CONFIG_S3C2400 || CONFIG_S3C2410 */
 
-#if 1
+#if 0
 /* LED1-4 all light */
 #if defined(CONFIG_S3C2410)
 #define GPBCON	0x56000010
@@ -206,6 +206,7 @@ reset:
 	/*
 	 * we do sys-critical inits only at reboot,
 	 * not when booting from ram!
+	 * cpu_init_crit :  包含MMU,cache,以及SDRAM的时序设置
 	 */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	adr	r0, _start		/* r0 <- current position of code   */
@@ -214,7 +215,7 @@ reset:
 	blne	cpu_init_crit
 #endif
 
-	/* Set up the stack						    */
+	/* Set up the stack		堆栈设置	    */
 stack_setup:
 	ldr	r0, _TEXT_BASE		/* upper 128 KiB: relocated uboot   */
 	sub	r0, r0, #CFG_MALLOC_LEN	/* malloc area                      */
@@ -224,9 +225,12 @@ stack_setup:
 	sub	r0, r0, #(CONFIG_STACKSIZE_IRQ+CONFIG_STACKSIZE_FIQ)
 #endif
 	sub	sp, r0, #12		/* leave 3 words for abort-stack    */
+/*
+到这里为止我们可以看到uboot在启动过程对内存的分配
+*/
 
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
-    bl clock_init
+    bl clock_init   /* 时钟初始化,400MHz */
 #endif    
 
 #ifndef CONFIG_SKIP_RELOCATE_UBOOT
@@ -239,17 +243,9 @@ relocate:				/* relocate U-Boot to RAM	    */
 	ldr	r2, _armboot_start
 	ldr	r3, _bss_start
 	sub	r2, r3, r2		/* r2 <- size of armboot            */
-#if 1
-	bl  CopyCode2Ram	/* r0: source, r1: dest, r2: size */
-#else
-	add	r2, r0, r2		/* r2 <- source end address         */
 
-copy_loop:
-	ldmia	r0!, {r3-r10}		/* copy from source address [r0]    */
-	stmia	r1!, {r3-r10}		/* copy to   target address [r1]    */
-	cmp	r0, r2			/* until source end addreee [r2]    */
-	ble	copy_loop
-#endif
+	bl  CopyCode2Ram	/* r0: source, r1: dest, r2: size */
+	
 #endif	/* CONFIG_SKIP_RELOCATE_UBOOT */
 
 clear_bss:
@@ -271,26 +267,6 @@ SetLoadFlag:
 	mov r3, #1
 	streq r3, [r2]
 
-#if 0
-	/* try doing this stuff after the relocation */
-	ldr     r0, =pWTCON
-	mov     r1, #0x0
-	str     r1, [r0]
-
-	/*
-	 * mask all IRQs by setting all bits in the INTMR - default
-	 */
-	mov	r1, #0xffffffff
-	ldr	r0, =INTMR
-	str	r1, [r0]
-
-	/* FCLK:HCLK:PCLK = 1:2:4 */
-	/* default FCLK is 120 MHz ! */
-	ldr	r0, =CLKDIVN
-	mov	r1, #3
-	str	r1, [r0]
-	/* END stuff after relocation */
-#endif
 
 	ldr	pc, _start_armboot
 
