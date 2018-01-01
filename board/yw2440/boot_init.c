@@ -451,7 +451,6 @@ void clock_init(void)
 {
 	S3C24X0_CLOCK_POWER *clk_power = (S3C24X0_CLOCK_POWER *)0x4C000000;
 
-    /* support both of S3C2410 and S3C2440, by www.arm9.net */
     if ((GSTATUS1 == 0x32410000) || (GSTATUS1 == 0x32410002))  //S3C2410
     {
         /* FCLK:HCLK:PCLK = 1:2:4 */

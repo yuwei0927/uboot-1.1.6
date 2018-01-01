@@ -74,6 +74,8 @@ else
 BUILD_DIR := $(CURDIR)/out
 endif
 
+TFTP_DIR := /mnt/tftp
+
 ifneq ($(BUILD_DIR),)
 saved-output := $(BUILD_DIR)
 
@@ -211,7 +213,6 @@ LIBS += drivers/nand/libnand.a
 LIBS += drivers/nand_legacy/libnand_legacy.a
 LIBS += drivers/usb/libusb.a
 LIBS += drivers/sk98lin/libsk98lin.a
-LIBS += post/libpost.a post/cpu/libcpu.a
 LIBS += common/libcommon.a
 LIBS += $(BOARDLIBS)
 
@@ -243,6 +244,7 @@ __LIBS := $(subst $(obj),,$(LIBS))
 ALL = $(obj)u-boot.srec $(obj)u-boot.bin $(obj)System.map $(U_BOOT_NAND)
 
 all:		$(ALL)
+		cp $(obj)u-boot.bin $(TFTP_DIR)
 
 $(obj)u-boot.hex:	$(obj)u-boot
 		$(OBJCOPY) ${OBJCFLAGS} -O ihex $< $@

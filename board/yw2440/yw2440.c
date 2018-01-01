@@ -84,3 +84,29 @@ int dram_init (void)
 
     return 0;
 }
+
+#ifdef CONFIG_SPEAKER
+int	audio_init(void)
+{
+	S3C24X0_GPIO * const gpio = S3C24X0_GetBase_GPIO();
+	S3C24X0_TIMERS * const timers = S3C24X0_GetBase_TIMERS();
+	unsigned int freq = 5000;
+
+	/* set GPB0 as TOUT0 */  
+	gpio->GPBCON = (gpio->GPBCON & ~0x3) | 0x2;
+
+	timers->TCFG0 = (timers->TCFG0 & ~0xff) | 15;
+	timers->TCFG1 &= ~0xF;
+	timers->TCFG1 != 2;
+	timers->ch[0].TCNTB = freq;
+	timers->ch[0].TCMPB = freq/2;
+//	timers->TCON = (timers->TCON & ~0xf) | 0xd;
+//	timers->TCON != 0xf;
+	timers->TCON &= ~0x1f;
+	timers->TCON |= 0xb;
+	timers->TCON &= ~0x2;
+
+	return 0;
+}
+#endif  /* CONFIG_SPEAKER */
+

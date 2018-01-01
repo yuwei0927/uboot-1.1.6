@@ -107,7 +107,7 @@
                         ((CONFIG_CMD_DFL | \
                         CFG_CMD_CACHE    | \
                     /* Start: by www.arm9.net */ \
-                         CFG_CMD_PING     |  \
+                        /* CFG_CMD_PING     | */ \
                         CFG_CMD_JFFS2    | \
                         CFG_CMD_NAND     | \
                     /* End: by www.arm9.net */ \
@@ -127,7 +127,7 @@
 #define CONFIG_ETHADDR	    08:00:3e:26:0a:5b
 #define CONFIG_NETMASK      255.255.0.0
 #define CONFIG_IPADDR		172.17.1.150
-#define CONFIG_SERVERIP		172.17.1.101
+#define CONFIG_SERVERIP		172.17.1.110
 /*#define CONFIG_BOOTFILE	"elinos-lart" */
 #define CONFIG_BOOTCOMMAND	"nand read.jffs2 0x32000000 kernel; bootm 0x32000000"
 
@@ -224,4 +224,15 @@
 
 //#define CONFIG_DISPLAY_CPUINFO	1
 //#define CONFIG_DISPLAY_BOARDINFO 1
+
+
+/* Audio */
+#define CONFIG_SPEAKER			1
+//#define CONFIG_HEADPHONE		0
+//#define CONFIG_AUDIO_UDA1341TS	0
+
+/* LCD */
+//#define CONFIG_LCD			0
+//#define CONFIG_LCD_N35		1
+
 #endif	/* __CONFIG_H */
