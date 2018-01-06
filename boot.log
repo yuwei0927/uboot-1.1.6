@@ -1,0 +1,64 @@
+U-Boot 1.1.6.YuWei-g5a3a9a8e (Jan  6 2018 - 18:33:24)
+
+U-Boot code: 33F80000 -> 33FAC6DC  BSS: -> 33FB3748
+IRQ Stack: 33f4ff7c
+FIQ Stack: 33f4ef7c
+Chip ID:0x32440001
+RAM Configuration:
+Bank #0: 30000000 64 MB
+flash_protect ON: from 0x00000000 to 0x0002C6DB
+protect on 0
+protect on 1
+protect on 2
+protect on 3
+protect on 4
+protect on 5
+flash_protect ON: from 0x000F0000 to 0x000FFFFF
+protect on 18
+Flash:  1 MB
+NAND:  64 MiB
+*** Warning - bad CRC, using default environment
+
+In:    serial
+Out:   serial
+Err:   serial
+UPLLVal [M:38h,P:2h,S:2h]
+MPLLVal [M:5ch,P:1h,S:1h]
+CLKDIVN:5h
+
+
++---------------------------------------------+
+| S3C2440A USB Downloader ver R0.03 2004 Jan  |
++---------------------------------------------+
+USB: IN_ENDPOINT:1 OUT_ENDPOINT:3
+FORMAT: <ADDR(DATA):4>+<SIZE(n+10):4>+<DATA:n>+<CS:2>
+NOTE: Power off/on or press the reset button for 1 sec
+      in order to get a valid USB device address.
+
+### main_loop entered: bootdelay=3
+
+### main_loop: bootcmd="nand read.jffs2 0x32000000 kernel; bootm 0x32000000"
+Hit any key to stop autoboot:  0 
+Booting Linux ...
+
+NAND read: device 0 offset 0x0, size 0x200000
+
+reading NAND page at offset 0x0 failed
+Could not read entire image due to bad blocks
+ 2097152 bytes read: ERROR
+## Booting image at 32000000 ...
+Bad Magic Number
+
+##### open24x0 Bootloader for FA24x0 #####
+[u] Download u-boot
+[k] Download Linux kernel
+[j] Download JFFS2 image
+[y] Download YAFFS image
+[d] Download to SDRAM & Run
+[b] Boot the system
+[f] Format the Nand Flash
+[s] Set the boot parameters
+[r] Reboot u-boot
+[q] Quit from menu
+Enter your selection: 
+
