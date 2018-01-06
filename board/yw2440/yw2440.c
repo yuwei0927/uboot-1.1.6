@@ -36,7 +36,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 int board_init (void)
 {
-    S3C24X0_CLOCK_POWER * const clk_power = S3C24X0_GetBase_CLOCK_POWER();
+//    S3C24X0_CLOCK_POWER * const clk_power = S3C24X0_GetBase_CLOCK_POWER();
     S3C24X0_GPIO * const gpio = S3C24X0_GetBase_GPIO();
 
     /* set up the I/O ports */
@@ -62,7 +62,7 @@ int board_init (void)
         /* arch number of SMDK2410-Board */
         gd->bd->bi_arch_number = MACH_TYPE_SMDK2410;
     }
-    else
+    else if (gpio->GSTATUS1 == 0x32440001)   //S3C2440 chip
     {
         /* arch number of SMDK2440-Board */
         gd->bd->bi_arch_number = MACH_TYPE_S3C2440;
@@ -109,4 +109,14 @@ int	audio_init(void)
 	return 0;
 }
 #endif  /* CONFIG_SPEAKER */
+
+#if defined(CONFIG_DISPLAY_CPUINFO)
+int print_cpuinfo (void)
+{
+	S3C24X0_GPIO * const gpio = S3C24X0_GetBase_GPIO();
+	printf ("Chip ID:0x%x\n", gpio->GSTATUS1);
+	return 0;
+
+}
+#endif
 

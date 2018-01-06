@@ -52,6 +52,7 @@
 #include "../drivers/lan91c96.h"
 #endif
 
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #if (CONFIG_COMMANDS & CFG_CMD_NAND)
@@ -209,17 +210,21 @@ static void display_flash_config (ulong size)
  * argument, and returns an integer return code, where 0 means
  * "continue" and != 0 means "fatal error, hang the system".
  */
+
 typedef int (init_fnc_t) (void);
 
-int print_cpuinfo (void); /* test-only */
+#if defined(CONFIG_DISPLAY_CPUINFO)
+extern int print_cpuinfo (void); /* test-only */
+#endif
 
 init_fnc_t *init_sequence[] = {
 	cpu_init,		/* basic cpu dependent setup */
 	board_init,		/* basic board dependent setup */
-	interrupt_init,		/* set up exceptions */
+	interrupt_init,		/* set up exceptions */  //实际上没有任何的作用，因为中断是关闭着的
+	/* 之前认为interrupt_init是没有用处的，但是后来发现与Delay时间有关系 */
 	env_init,		/* initialize environment */
-	init_baudrate,		/* initialze baudrate settings */
-	serial_init,		/* serial communications setup */
+	init_baudrate,		/* initialze baudrate settings */  //只是设置波特率
+	serial_init,		/* serial communications setup */  //设置串口Reg
 	console_init_f,		/* stage 1 init of console */
 	display_banner,		/* say that we are here */
 #if defined(CONFIG_DISPLAY_CPUINFO)
@@ -283,7 +288,6 @@ void start_armboot (void)
 #ifdef CONFIG_SPEAKER
 	audio_init();
 #endif  /* CONFIG_SPEAKER */
-
 
 #ifdef CONFIG_LCD
 #	ifndef PAGE_SIZE

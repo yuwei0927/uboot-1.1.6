@@ -124,26 +124,26 @@ reset:
 	 * set the cpu to SVC32 mode
 	 */
 /*
-¸ü¸Ä´¦ÀíÆ÷Ä£Ê½Îª¹ÜÀíÄ£Ê½
-¶Ô×´Ì¬¼Ä´æÆ÷µÄĞŞ¸ÄÒª°´ÕÕ£º¶Á³ö-ĞŞ¸Ä-Ğ´»ØµÄË³ĞòÀ´Ö´ĞĞ
+æ›´æ”¹å¤„ç†å™¨æ¨¡å¼ä¸ºç®¡ç†æ¨¡å¼
+å¯¹çŠ¶æ€å¯„å­˜å™¨çš„ä¿®æ”¹è¦æŒ‰ç…§ï¼šè¯»å‡º-ä¿®æ”¹-å†™å›çš„é¡ºåºæ¥æ‰§è¡Œ
 
     31 30 29 28 ---   7   6   -   4    3   2   1   0
     N  Z  C  V        I   F       M4  M3  M2 M1 M0
-                                   0   0   0  0   0     User26 Ä£Ê½
-                                   0   0   0  0   1     FIQ26 Ä£Ê½
-                                   0   0   0  1   0     IRQ26 Ä£Ê½
-                                   0   0   0  1   1     SVC26 Ä£Ê½
-                                   1   0   0  0   0     User Ä£Ê½
-                                   1   0   0  0   1     FIQ Ä£Ê½
-                                   1   0   0  1   0     IRQ Ä£Ê½
-                                   1   0   0  1   1     SVC Ä£Ê½
-                                   1   0   1  1   1     ABT Ä£Ê½
-                                   1   1   0  1   1     UND Ä£Ê½
-                                   1   1   1  1   1     SYS Ä£Ê½
+                                   0   0   0  0   0     User26 æ¨¡å¼
+                                   0   0   0  0   1     FIQ26 æ¨¡å¼
+                                   0   0   0  1   0     IRQ26 æ¨¡å¼
+                                   0   0   0  1   1     SVC26 æ¨¡å¼
+                                   1   0   0  0   0     User æ¨¡å¼
+                                   1   0   0  0   1     FIQ æ¨¡å¼
+                                   1   0   0  1   0     IRQ æ¨¡å¼
+                                   1   0   0  1   1     SVC æ¨¡å¼
+                                   1   0   1  1   1     ABT æ¨¡å¼
+                                   1   1   0  1   1     UND æ¨¡å¼
+                                   1   1   1  1   1     SYS æ¨¡å¼
 */
 	mrs	r0,cpsr
-	bic	r0,r0,#0x1f	/* Çå³ıM0~M4 */
-	orr	r0,r0,#0xd3 /* ½ûÖ¹IRQ,FIQÖĞ¶Ï£¬²¢½«´¦ÀíÆ÷ÖÃÓÚ¹ÜÀíÄ£Ê½ */
+	bic	r0,r0,#0x1f	/* æ¸…é™¤M0~M4 */
+	orr	r0,r0,#0xd3 /* ç¦æ­¢IRQ,FIQä¸­æ–­ï¼Œå¹¶å°†å¤„ç†å™¨ç½®äºç®¡ç†æ¨¡å¼ */
 	msr	cpsr,r0
 
 /* turn off the watchdog */
@@ -171,12 +171,12 @@ reset:
 	ldr	r0, =INTMSK
 	str	r1, [r0]
 # if defined(CONFIG_S3C2410)
-	ldr	r1, =0x7ff  /* 2410ºÍ2440Ó¦¸ÃÎª7ff²Å¶Ô */
+	ldr	r1, =0x7ff  /* 2410å’Œ2440åº”è¯¥ä¸º7ffæ‰å¯¹ */
 	ldr	r0, =INTSUBMSK
 	str	r1, [r0]
 # endif
 
-#if 0    /*  ÉèÖÃÊ±ÖÓ·ÖÆµÏµÊı*/
+#if 0    /*  è®¾ç½®æ—¶é’Ÿåˆ†é¢‘ç³»æ•° */
 	/* FCLK:HCLK:PCLK = 1:2:4 */
 	/* default FCLK is 120 MHz ! */
 	ldr	r0, =CLKDIVN
@@ -206,7 +206,7 @@ reset:
 	/*
 	 * we do sys-critical inits only at reboot,
 	 * not when booting from ram!
-	 * cpu_init_crit :  °üº¬MMU,cache,ÒÔ¼°SDRAMµÄÊ±ĞòÉèÖÃ
+	 * cpu_init_crit :  åŒ…å«MMU,cache,ä»¥åŠSDRAMçš„æ—¶åºè®¾ç½®
 	 */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	adr	r0, _start		/* r0 <- current position of code   */
@@ -215,7 +215,7 @@ reset:
 	blne	cpu_init_crit
 #endif
 
-	/* Set up the stack		¶ÑÕ»ÉèÖÃ	    */
+	/* Set up the stack		å †æ ˆè®¾ç½®     */
 stack_setup:
 	ldr	r0, _TEXT_BASE		/* upper 128 KiB: relocated uboot   */
 	sub	r0, r0, #CFG_MALLOC_LEN	/* malloc area                      */
@@ -226,11 +226,11 @@ stack_setup:
 #endif
 	sub	sp, r0, #12		/* leave 3 words for abort-stack    */
 /*
-µ½ÕâÀïÎªÖ¹ÎÒÃÇ¿ÉÒÔ¿´µ½ubootÔÚÆô¶¯¹ı³Ì¶ÔÄÚ´æµÄ·ÖÅä
+åˆ°è¿™é‡Œä¸ºæ­¢æˆ‘ä»¬å¯ä»¥çœ‹åˆ°ubootåœ¨å¯åŠ¨è¿‡ç¨‹å¯¹å†…å­˜çš„åˆ†é…
 */
 
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
-    bl clock_init   /* Ê±ÖÓ³õÊ¼»¯,400MHz */
+    bl clock_init   /* æ—¶é’Ÿåˆå§‹åŒ–,400MHz */
 #endif    
 
 #ifndef CONFIG_SKIP_RELOCATE_UBOOT

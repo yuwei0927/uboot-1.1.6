@@ -235,4 +235,5 @@
 //#define CONFIG_LCD			0
 //#define CONFIG_LCD_N35		1
 
+#define CONFIG_DISPLAY_CPUINFO	1
 #endif	/* __CONFIG_H */
