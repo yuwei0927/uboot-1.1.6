@@ -1,12 +1,19 @@
-U-Boot 1.1.6.YuWei-g5a3a9a8e (Jan  6 2018 - 18:33:24)
+U-Boot 1.1.6.YuWei-g92ebec78 (Jan  7 2018 - 10:57:42)
 
-U-Boot code: 33F80000 -> 33FAC6DC  BSS: -> 33FB3748
+U-Boot code: 33F80000 -> 33FAC848  BSS: -> 33FB38B4
 IRQ Stack: 33f4ff7c
 FIQ Stack: 33f4ef7c
 Chip ID:0x32440001
+This CPU chip is S3C2440
++---------------------------------------------+
+HCLK = 100MHz
+PCLK = 50MHz
+UCLK = 96MHz
+FCLK = 400MHz
++---------------------------------------------+
 RAM Configuration:
 Bank #0: 30000000 64 MB
-flash_protect ON: from 0x00000000 to 0x0002C6DB
+flash_protect ON: from 0x00000000 to 0x0002C847
 protect on 0
 protect on 1
 protect on 2
@@ -43,9 +50,8 @@ Booting Linux ...
 
 NAND read: device 0 offset 0x0, size 0x200000
 
-reading NAND page at offset 0x0 failed
-Could not read entire image due to bad blocks
- 2097152 bytes read: ERROR
+Reading data from 0x1ffe00 -- 100% complete.
+ 2097152 bytes read: OK
 ## Booting image at 32000000 ...
 Bad Magic Number
 
@@ -60,5 +66,4 @@ Bad Magic Number
 [s] Set the boot parameters
 [r] Reboot u-boot
 [q] Quit from menu
-Enter your selection: 
-
+Enter your selection:

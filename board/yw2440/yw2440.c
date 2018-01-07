@@ -100,8 +100,6 @@ int	audio_init(void)
 	timers->TCFG1 != 2;
 	timers->ch[0].TCNTB = freq;
 	timers->ch[0].TCMPB = freq/2;
-//	timers->TCON = (timers->TCON & ~0xf) | 0xd;
-//	timers->TCON != 0xf;
 	timers->TCON &= ~0x1f;
 	timers->TCON |= 0xb;
 	timers->TCON &= ~0x2;
@@ -114,7 +112,26 @@ int	audio_init(void)
 int print_cpuinfo (void)
 {
 	S3C24X0_GPIO * const gpio = S3C24X0_GetBase_GPIO();
+	
 	printf ("Chip ID:0x%x\n", gpio->GSTATUS1);
+	
+	if ((gpio->GSTATUS1 == 0x32410000) || (gpio->GSTATUS1 == 0x32410002)){
+        puts ("This CPU chip is S3C2410\n");
+    }else if (gpio->GSTATUS1 == 0x32440001) {
+        puts ("This CPU chip is S3C2440\n");
+    }else{
+		puts ("Unkown CPU chip!\n");
+		while(1);
+	}
+
+	//print the Clock info
+	puts ("+---------------------------------------------+\n");
+	printf ("HCLK = %ldMHz\n", get_HCLK()/1000/1000);
+	printf ("PCLK = %ldMHz\n", get_PCLK()/1000/1000);
+	printf ("UCLK = %ldMHz\n", get_UCLK()/1000/1000);
+	printf ("FCLK = %ldMHz\n", get_FCLK()/1000/1000);
+	puts ("+---------------------------------------------+\n");
+	
 	return 0;
 
 }
