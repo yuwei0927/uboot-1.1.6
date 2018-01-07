@@ -115,6 +115,9 @@ int	audio_init(void)
 int print_cpuinfo (void)
 {
 	S3C24X0_GPIO * const gpio = S3C24X0_GetBase_GPIO();
+	S3C24X0_CLOCK_POWER * const clk_power = S3C24X0_GetBase_CLOCK_POWER();
+
+	unsigned int mpll_val, upll_val;
 	
 	printf ("Chip ID:0x%x\n", gpio->GSTATUS1);
 	
@@ -127,12 +130,18 @@ int print_cpuinfo (void)
 		return -1;
 	}
 
+	mpll_val = clk_power->MPLLCON;
+	upll_val = clk_power->UPLLCON; 
+
 	//print the Clock info
 	puts ("+---------------------------------------------+\n");
 	printf ("HCLK = %ldMHz\n", get_HCLK()/1000/1000);
 	printf ("PCLK = %ldMHz\n", get_PCLK()/1000/1000);
 	printf ("UCLK = %ldMHz\n", get_UCLK()/1000/1000);
 	printf ("FCLK = %ldMHz\n", get_FCLK()/1000/1000);
+	printf("UPLLVal [M:%xh,P:%xh,S:%xh]\n", (upll_val&(0xff<<12))>>12,(upll_val&(0x3f<<4))>>4,(upll_val&0x3));
+	printf("MPLLVal [M:%xh,P:%xh,S:%xh]\n", (mpll_val&(0xff<<12))>>12,(mpll_val&(0x3f<<4))>>4,(mpll_val&0x3));
+	printf("CLKDIVN: %xh\n", clk_power->CLKDIVN);
 	puts ("+---------------------------------------------+\n");
 	
 	return 0;

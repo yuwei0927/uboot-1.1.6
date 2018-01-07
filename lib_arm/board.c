@@ -370,12 +370,16 @@ void start_armboot (void)
 #endif
 
 	Port_Init();  
+
+#if 0  
+	printf ("YuWei: PreLoadedONRAM = %08lx\n", PreLoadedONRAM);
 	if (!PreLoadedONRAM) {
 		/* enable exceptions */
 		enable_interrupts ();
 	    /* add by www.arm9.net */
 	    usb_init();
 	}
+#endif
 
     /* Perform network card initialisation if necessary */
 #ifdef CONFIG_DRIVER_CS8900

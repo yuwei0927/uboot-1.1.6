@@ -1,7 +1,6 @@
+U-Boot 1.1.6.YuWei-g1b7a5bf7-dirty (Jan  7 2018 - 19:39:43)
 
-U-Boot 1.1.6.YuWei-g27173b6c-dirty (Jan  7 2018 - 16:17:13)
-
-U-Boot code: 33F80000 -> 33FAC95C  BSS: -> 33FB436C
+U-Boot code: 33F80000 -> 33FAC93C  BSS: -> 33FB434C
 IRQ Stack: 33f4ff7c
 FIQ Stack: 33f4ef7c
 Chip ID:0x32440001
@@ -11,10 +10,13 @@ HCLK = 100MHz
 PCLK = 50MHz
 UCLK = 96MHz
 FCLK = 400MHz
+UPLLVal [M:38h,P:2h,S:2h]
+MPLLVal [M:5ch,P:1h,S:1h]
+CLKDIVN: 5h
 +---------------------------------------------+
 RAM Configuration:
 Bank #0: 30000000 64 MB
-flash_protect ON: from 0x00000000 to 0x0002C95B
+flash_protect ON: from 0x00000000 to 0x0002C93B
 protect on 0
 protect on 1
 protect on 2
@@ -84,19 +86,6 @@ env_relocate[222] malloced ENV at 33f50428
 In:    serial
 Out:   serial
 Err:   serial
-UPLLVal [M:38h,P:2h,S:2h]
-MPLLVal [M:5ch,P:1h,S:1h]
-CLKDIVN:5h
-
-
-+---------------------------------------------+
-| S3C2440A USB Downloader ver R0.03 2004 Jan  |
-+---------------------------------------------+
-USB: IN_ENDPOINT:1 OUT_ENDPOINT:3
-FORMAT: <ADDR(DATA):4>+<SIZE(n+10):4>+<DATA:n>+<CS:2>
-NOTE: Power off/on or press the reset button for 1 sec
-      in order to get a valid USB device address.
-
 ### main_loop entered: bootdelay=3
 
 ### main_loop: bootcmd="nand read.jffs2 0x32000000 kernel; bootm 0x32000000"

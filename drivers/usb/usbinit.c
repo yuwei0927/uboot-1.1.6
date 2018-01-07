@@ -219,7 +219,7 @@ void usb_init(void)
 	char *mode;
 	int i;
 	U8 key;
-	U32 mpll_val, upll_val, divn_upll=0;
+	//U32 divn_upll=0;
     extern int bBootFrmNORFlash(void);
 
     clk_powerregs = S3C24X0_GetBase_CLOCK_POWER();
@@ -278,15 +278,9 @@ void usb_init(void)
 //	Clk0_Disable();
 //	Clk1_Disable();
 	
-	mpll_val = clk_powerregs->MPLLCON;
-	upll_val = clk_powerregs->UPLLCON; 
-
 
     if (1) //(!bBootFrmNORFlash())
     {
-    	printf("UPLLVal [M:%xh,P:%xh,S:%xh]\n", (upll_val&(0xff<<12))>>12,(upll_val&(0x3f<<4))>>4,(upll_val&0x3));
-    	printf("MPLLVal [M:%xh,P:%xh,S:%xh]\n", (mpll_val&(0xff<<12))>>12,(mpll_val&(0x3f<<4))>>4,(mpll_val&0x3));
-    	printf("CLKDIVN:%xh\n", clk_powerregs->CLKDIVN);
 
     	printf("\n\n");
     	printf("+---------------------------------------------+\n");
