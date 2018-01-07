@@ -138,7 +138,7 @@ void Port_Init(void)
     //Binary :   00  ,  01       00  ,   01      00   ,  01       01  ,   01     01   ,  01        01  
     gpioregs->GPBCON = 0x044555;
     gpioregs->GPBUP  = 0x7ff;     // The pull up function is disabled GPB[10:0]
-	gpioregs->GPBDAT &= ~(1<<0);	/* ½ûÖ¹·äÃùÆ÷ */
+	gpioregs->GPBDAT &= ~(1<<0);	/* ç¦æ­¢èœ‚é¸£å™¨ */
 	gpioregs->GPBDAT &= ~(1<<9);	/* disable USB Device, enable later, mike.arm9 */
 
     //*** PORT C GROUP

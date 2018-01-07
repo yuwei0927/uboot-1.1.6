@@ -1,6 +1,7 @@
-U-Boot 1.1.6.YuWei-g92ebec78 (Jan  7 2018 - 10:57:42)
 
-U-Boot code: 33F80000 -> 33FAC848  BSS: -> 33FB38B4
+U-Boot 1.1.6.YuWei-g27173b6c-dirty (Jan  7 2018 - 16:17:13)
+
+U-Boot code: 33F80000 -> 33FAC95C  BSS: -> 33FB436C
 IRQ Stack: 33f4ff7c
 FIQ Stack: 33f4ef7c
 Chip ID:0x32440001
@@ -13,19 +14,73 @@ FCLK = 400MHz
 +---------------------------------------------+
 RAM Configuration:
 Bank #0: 30000000 64 MB
-flash_protect ON: from 0x00000000 to 0x0002C847
+flash_protect ON: from 0x00000000 to 0x0002C95B
 protect on 0
 protect on 1
 protect on 2
 protect on 3
 protect on 4
 protect on 5
-flash_protect ON: from 0x000F0000 to 0x000FFFFF
+protect on 6
+protect on 7
+protect on 8
+protect on 9
+protect on 10
+protect on 11
+protect on 12
+protect on 13
+protect on 14
+protect on 15
+protect on 16
+protect on 17
 protect on 18
-Flash:  1 MB
+protect on 19
+protect on 20
+protect on 21
+protect on 22
+protect on 23
+protect on 24
+protect on 25
+protect on 26
+protect on 27
+protect on 28
+protect on 29
+protect on 30
+protect on 31
+protect on 32
+protect on 33
+protect on 34
+protect on 35
+protect on 36
+protect on 37
+protect on 38
+protect on 39
+protect on 40
+protect on 41
+protect on 42
+protect on 43
+protect on 44
+flash_protect ON: from 0x00070000 to 0x0007FFFF
+protect on 112
+protect on 113
+protect on 114
+protect on 115
+protect on 116
+protect on 117
+protect on 118
+protect on 119
+protect on 120
+protect on 121
+protect on 122
+protect on 123
+protect on 124
+protect on 125
+protect on 126
+protect on 127
+Flash:  2 MB
 NAND:  64 MiB
-*** Warning - bad CRC, using default environment
-
+env_relocate[204] offset = 0x0
+env_relocate[222] malloced ENV at 33f50428
 In:    serial
 Out:   serial
 Err:   serial
@@ -66,4 +121,4 @@ Bad Magic Number
 [s] Set the boot parameters
 [r] Reboot u-boot
 [q] Quit from menu
-Enter your selection:
+Enter your selection: 

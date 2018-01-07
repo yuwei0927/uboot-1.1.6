@@ -79,8 +79,11 @@ int board_init (void)
 
 int dram_init (void)
 {
-    gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
-    gd->bd->bi_dram[0].size = PHYS_SDRAM_1_SIZE;
+	int i;
+	for (i=0;i<CONFIG_NR_DRAM_BANKS;i++){
+	    gd->bd->bi_dram[i].start = PHYS_SDRAM_1;
+    	gd->bd->bi_dram[i].size = PHYS_SDRAM_1_SIZE;
+	}
 
     return 0;
 }
@@ -121,7 +124,7 @@ int print_cpuinfo (void)
         puts ("This CPU chip is S3C2440\n");
     }else{
 		puts ("Unkown CPU chip!\n");
-		while(1);
+		return -1;
 	}
 
 	//print the Clock info

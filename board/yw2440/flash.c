@@ -28,7 +28,11 @@ ulong myflush (void);
 
 
 #define FLASH_BANK_SIZE	PHYS_FLASH_SIZE
+#if defined(CONFIG_SST_39VF1601)
+#define MAIN_SECT_SIZE  0x1000	/* 4 KByte/sector */
+#else
 #define MAIN_SECT_SIZE  0x10000	/* 64 KB */
+#endif 
 
 flash_info_t flash_info[CFG_MAX_FLASH_BANKS];
 
@@ -41,8 +45,13 @@ flash_info_t flash_info[CFG_MAX_FLASH_BANKS];
 #define CMD_PROGRAM		0x000000A0
 #define CMD_UNLOCK_BYPASS	0x00000020
 
+#ifdef  CONFIG_SST_39VF1601
+#define MEM_FLASH_ADDR1		(*(volatile u16 *)(CFG_FLASH_BASE + (0x000005555 << 1)))
+#define MEM_FLASH_ADDR2		(*(volatile u16 *)(CFG_FLASH_BASE + (0x000002AAA << 1)))
+#else
 #define MEM_FLASH_ADDR1		(*(volatile u16 *)(CFG_FLASH_BASE + (0x00000555 << 1)))
 #define MEM_FLASH_ADDR2		(*(volatile u16 *)(CFG_FLASH_BASE + (0x000002AA << 1)))
+#endif
 
 #define BIT_ERASE_DONE		0x00000080
 #define BIT_RDY_MASK		0x00000080
@@ -71,10 +80,13 @@ ulong flash_init (void)
 #elif defined(CONFIG_AMD_LV800)
 			(AMD_MANUFACT & FLASH_VENDMASK) |
 			(AMD_ID_LV800B & FLASH_TYPEMASK);
+#elif defined(CONFIG_SST_39VF1601)
+			(SST_MANUFACT & FLASH_VENDMASK) |
+			(SST_ID_xF1601 & FLASH_TYPEMASK);
 #else
 #error "Unknown flash configured"
 #endif
-			flash_info[i].size = FLASH_BANK_SIZE;
+		flash_info[i].size = FLASH_BANK_SIZE;
 		flash_info[i].sector_count = CFG_MAX_FLASH_SECT;
 		memset (flash_info[i].protect, 0, CFG_MAX_FLASH_SECT);
 		if (i == 0)
@@ -82,6 +94,7 @@ ulong flash_init (void)
 		else
 			panic ("configured too many flash banks!\n");
 		for (j = 0; j < flash_info[i].sector_count; j++) {
+#ifndef CONFIG_SST_39VF1601
 			if (j <= 3) {
 				/* 1st one is 16 KB */
 				if (j == 0) {
@@ -106,6 +119,10 @@ ulong flash_init (void)
 				flash_info[i].start[j] =
 					flashbase + (j - 3) * MAIN_SECT_SIZE;
 			}
+#else		
+			flash_info[i].start[j] =
+				flashbase + (j) * MAIN_SECT_SIZE;
+#endif
 		}
 		size += flash_info[i].size;
 	}

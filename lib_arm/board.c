@@ -285,7 +285,7 @@ void start_armboot (void)
 	gd->fb_base = addr;
 #endif /* CONFIG_VFD */
 
-#ifdef CONFIG_SPEAKER
+#if defined(CONFIG_SPEAKER)
 	audio_init();
 #endif  /* CONFIG_SPEAKER */
 
@@ -307,7 +307,7 @@ void start_armboot (void)
 
 #if (CONFIG_COMMANDS & CFG_CMD_NAND)
 	puts ("NAND:  ");
-	nand_init();		/* go init the NAND */
+	nand_init();		/* go init the NAND */   //drivers/nand/nand.c
 #endif
 
 #ifdef CONFIG_HAS_DATAFLASH
@@ -369,7 +369,7 @@ void start_armboot (void)
 	misc_init_r ();
 #endif
 
-	Port_Init();
+	Port_Init();  
 	if (!PreLoadedONRAM) {
 		/* enable exceptions */
 		enable_interrupts ();
