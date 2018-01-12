@@ -48,6 +48,7 @@ TODO: Homerun NIC and longrun NIC are not functional, only internal at the
 #include <asm/io.h>
 
 #ifdef CONFIG_DRIVER_DM9000
+#include <malloc.h>
 
 #include "dm9000x.h"
 
@@ -56,17 +57,19 @@ TODO: Homerun NIC and longrun NIC are not functional, only internal at the
 #define DM9801_NOISE_FLOOR	0x08
 #define DM9802_NOISE_FLOOR	0x05
 
-/* #define CONFIG_DM9000_DEBUG */
+//#define CONFIG_DM9000_DEBUG
 
 #ifdef CONFIG_DM9000_DEBUG
 #define DM9000_DBG(fmt,args...) printf(fmt ,##args)
 #else				/*  */
 #define DM9000_DBG(fmt,args...)
-#endif				/*  */
+#endif	
+/*  */
 enum DM9000_PHY_mode { DM9000_10MHD = 0, DM9000_100MHD =
 	    1, DM9000_10MFD = 4, DM9000_100MFD = 5, DM9000_AUTO =
 	    8, DM9000_1M_HPNA = 0x10
 };
+
 enum DM9000_NIC_TYPE { FASTETHER_NIC = 0, HOMERUN_NIC = 1, LONGRUN_NIC = 2
 };
 
@@ -88,20 +91,7 @@ typedef struct board_info {
 board_info_t dmfe_info;
 
 /* For module input parameter */
-static int media_mode = DM9000_AUTO;
 static u8 nfloor = 0;
-
-/* function declaration ------------------------------------- */
-int eth_init(bd_t * bd);
-int eth_send(volatile void *, int);
-int eth_rx(void);
-void eth_halt(void);
-static int dm9000_probe(void);
-static u16 phy_read(int);
-static void phy_write(int, u16);
-static u16 read_srom_word(int);
-static u8 DM9000_ior(int);
-static void DM9000_iow(int reg, u8 value);
 
 /* DM9000 network board routine ---------------------------- */
 
@@ -112,28 +102,77 @@ static void DM9000_iow(int reg, u8 value);
 #define DM9000_inw(r) (*(volatile u16 *)r)
 #define DM9000_inl(r) (*(volatile u32 *)r)
 
-#ifdef CONFIG_DM9000_DEBUG
-static void
-dump_regs(void)
+/*
+   Read a byte from I/O port
+*/
+static u8 DM9000_ior(int reg)
 {
-	DM9000_DBG("\n");
-	DM9000_DBG("NCR   (0x00): %02x\n", DM9000_ior(0));
-	DM9000_DBG("NSR   (0x01): %02x\n", DM9000_ior(1));
-	DM9000_DBG("TCR   (0x02): %02x\n", DM9000_ior(2));
-	DM9000_DBG("TSRI  (0x03): %02x\n", DM9000_ior(3));
-	DM9000_DBG("TSRII (0x04): %02x\n", DM9000_ior(4));
-	DM9000_DBG("RCR   (0x05): %02x\n", DM9000_ior(5));
-	DM9000_DBG("RSR   (0x06): %02x\n", DM9000_ior(6));
-	DM9000_DBG("ISR   (0xFE): %02x\n", DM9000_ior(ISR));
-	DM9000_DBG("\n");
+	DM9000_outb(reg, DM9000_IO);
+	return DM9000_inb(DM9000_DATA);
 }
-#endif				/*  */
+
+/*
+   Write a byte to I/O port
+*/
+static void DM9000_iow(int reg, u8 value)
+{
+	DM9000_outb(reg, DM9000_IO);
+	DM9000_outb(value, DM9000_DATA);
+}
+
+/*
+   Read a word from phyxcer
+*/
+static u16 phy_read(int reg)
+{
+	u16 val;
+
+	/* Fill the phyxcer register into REG_0C */
+	DM9000_iow(DM9000_EPAR, DM9000_PHY | reg);
+	DM9000_iow(DM9000_EPCR, 0xc);	/* Issue phyxcer read command */
+	udelay(100);		/* Wait read complete */
+	DM9000_iow(DM9000_EPCR, 0x0);	/* Clear phyxcer read command */
+	val = (DM9000_ior(DM9000_EPDRH) << 8) | DM9000_ior(DM9000_EPDRL);
+
+	/* The read data keeps on REG_0D & REG_0E */
+	DM9000_DBG("phy_read(%d): %d\n", reg, val);
+	return val;
+}
+
+/*
+   Write a word to phyxcer
+*/
+static void phy_write(int reg, u16 value)
+{
+
+	/* Fill the phyxcer register into REG_0C */
+	DM9000_iow(DM9000_EPAR, DM9000_PHY | reg);
+
+	/* Fill the written data into REG_0D & REG_0E */
+	DM9000_iow(DM9000_EPDRL, (value & 0xff));
+	DM9000_iow(DM9000_EPDRH, ((value >> 8) & 0xff));
+	DM9000_iow(DM9000_EPCR, 0xa);	/* Issue phyxcer write command */
+	udelay(500);		/* Wait write complete */
+	DM9000_iow(DM9000_EPCR, 0x0);	/* Clear phyxcer write command */
+	DM9000_DBG("phy_write(reg:%d, value:%d)\n", reg, value);
+}
+
+/*
+  Read a word data from SROM
+*/
+static u16 read_srom_word(int offset)
+{
+	DM9000_iow(DM9000_EPAR, offset);
+	DM9000_iow(DM9000_EPCR, 0x4);
+	udelay(200);
+	DM9000_iow(DM9000_EPCR, 0x0);
+	return (DM9000_ior(DM9000_EPDRL) + (DM9000_ior(DM9000_EPDRH) << 8));
+}
 
 /*
   Search DM9000 board, allocate space and register it
 */
-int
-dm9000_probe(void)
+int dm9000_probe(void)
 {
 	u32 id_val;
 	id_val = DM9000_ior(DM9000_VIDL);
@@ -141,7 +180,7 @@ dm9000_probe(void)
 	id_val |= DM9000_ior(DM9000_PIDL) << 16;
 	id_val |= DM9000_ior(DM9000_PIDH) << 24;
 	if (id_val == DM9000_ID) {
-		printf("dm9000 i/o: 0x%x, id: 0x%x \n", CONFIG_DM9000_BASE,
+		DM9000_DBG("dm9000 i/o: 0x%x, id: 0x%x \n", CONFIG_DM9000_BASE,
 		       id_val);
 		return 0;
 	} else {
@@ -153,12 +192,11 @@ dm9000_probe(void)
 
 /* Set PHY operationg mode
 */
-static void
-set_PHY_mode(void)
+static void set_PHY_mode(int mode)
 {
 	u16 phy_reg4 = 0x01e1, phy_reg0 = 0x1000;
-	if (!(media_mode & DM9000_AUTO)) {
-		switch (media_mode) {
+	if (!(mode & DM9000_AUTO)) {
+		switch (mode) {
 		case DM9000_10MHD:
 			phy_reg4 = 0x21;
 			phy_reg0 = 0x0000;
@@ -186,8 +224,7 @@ set_PHY_mode(void)
 /*
 	Init HomeRun DM9801
 */
-static void
-program_dm9801(u16 HPNA_rev)
+static void program_dm9801(u16 HPNA_rev)
 {
 	__u16 reg16, reg17, reg24, reg25;
 	if (!nfloor)
@@ -220,8 +257,7 @@ program_dm9801(u16 HPNA_rev)
 /*
 	Init LongRun DM9802
 */
-static void
-program_dm9802(void)
+static void program_dm9802(void)
 {
 	__u16 reg25;
 	if (!nfloor)
@@ -233,8 +269,7 @@ program_dm9802(void)
 
 /* Identify NIC type
 */
-static void
-identify_nic(void)
+static void identify_nic(void)
 {
 	struct board_info *db = &dmfe_info;	/* Point a board information structure */
 	u16 phy_reg3;
@@ -260,8 +295,7 @@ identify_nic(void)
 }
 
 /* General Purpose dm9000 reset routine */
-static void
-dm9000_reset(void)
+static void dm9000_reset(void)
 {
 	DM9000_DBG("resetting\n");
 	DM9000_iow(DM9000_NCR, NCR_RST);
@@ -270,99 +304,43 @@ dm9000_reset(void)
 
 /* Initilize dm9000 board
 */
-int
-eth_init(bd_t * bd)
+int dm9000_init(struct eth_device* dev, bd_t * bd)
 {
-	int i, oft, lnk;
-	DM9000_DBG("eth_init()\n");
-
-	/* RESET device */
-	dm9000_reset();
-	dm9000_probe();
-
-	/* NIC Type: FASTETHER, HOMERUN, LONGRUN */
-	identify_nic();
-
-	/* GPIO0 on pre-activate PHY */
-	DM9000_iow(DM9000_GPR, 0x00);	/*REG_1F bit0 activate phyxcer */
-
-	/* Set PHY */
-	set_PHY_mode();
-
-	/* Program operating register */
-	DM9000_iow(DM9000_NCR, 0x0);	/* only intern phy supported by now */
-	DM9000_iow(DM9000_TCR, 0);	/* TX Polling clear */
-	DM9000_iow(DM9000_BPTR, 0x3f);	/* Less 3Kb, 200us */
-	DM9000_iow(DM9000_FCTR, FCTR_HWOT(3) | FCTR_LWOT(8));	/* Flow Control : High/Low Water */
-	DM9000_iow(DM9000_FCR, 0x0);	/* SH FIXME: This looks strange! Flow Control */
-	DM9000_iow(DM9000_SMCR, 0);	/* Special Mode */
-	DM9000_iow(DM9000_NSR, NSR_WAKEST | NSR_TX2END | NSR_TX1END);	/* clear TX status */
-	DM9000_iow(DM9000_ISR, 0x0f);	/* Clear interrupt status */
-
-	/* Set Node address */
-	for (i = 0; i < 6; i++)
-		((u16 *) bd->bi_enetaddr)[i] = read_srom_word(i);
-	printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", bd->bi_enetaddr[0],
-	       bd->bi_enetaddr[1], bd->bi_enetaddr[2], bd->bi_enetaddr[3],
-	       bd->bi_enetaddr[4], bd->bi_enetaddr[5]);
-	for (i = 0, oft = 0x10; i < 6; i++, oft++)
-		DM9000_iow(oft, bd->bi_enetaddr[i]);
-	for (i = 0, oft = 0x16; i < 8; i++, oft++)
-		DM9000_iow(oft, 0xff);
-
-	/* read back mac, just to be sure */
-	for (i = 0, oft = 0x10; i < 6; i++, oft++)
-		DM9000_DBG("%02x:", DM9000_ior(oft));
-	DM9000_DBG("\n");
-
 	/* Activate DM9000 */
+	DM9000_DBG("dm9000_init\n");
+
+	DM9000_iow(DM9000_GPR, 0x00);	/*REG_1F bit0 activate phyxcer */
+	udelay(500);	
+
 	DM9000_iow(DM9000_RCR, RCR_DIS_LONG | RCR_DIS_CRC | RCR_RXEN);	/* RX enable */
 	DM9000_iow(DM9000_IMR, IMR_PAR);	/* Enable TX/RX interrupt mask */
-	i = 0;
-	while (!(phy_read(1) & 0x20)) {	/* autonegation complete bit */
-		udelay(1000);
-		i++;
-		if (i == 10000) {
-			printf("could not establish link\n");
-			return 0;
-		}
-	}
+	return 1;
+}
 
-	/* see what we've got */
-	lnk = phy_read(17) >> 12;
-	printf("operating at ");
-	switch (lnk) {
-	case 1:
-		printf("10M half duplex ");
-		break;
-	case 2:
-		printf("10M full duplex ");
-		break;
-	case 4:
-		printf("100M half duplex ");
-		break;
-	case 8:
-		printf("100M full duplex ");
-		break;
-	default:
-		printf("unknown: %d ", lnk);
-		break;
-	}
-	printf("mode\n");
-	return 0;
+/*
+  Stop the interface.
+  The interface is stopped when it is brought.
+*/
+void dm9000_halt(struct eth_device *nic)
+{
+	DM9000_DBG("DM9000_halt\n");
+
+	DM9000_iow(DM9000_GPR, 0x01);	/* Power-Down PHY */
+	DM9000_iow(DM9000_IMR, 0x80);	/* Disable all interrupt */
+	DM9000_iow(DM9000_RCR, 0x00);	/* Disable RX */
 }
 
 /*
   Hardware start transmission.
   Send a packet to media from the upper layer.
 */
-int
-eth_send(volatile void *packet, int length)
+int dm9000_send(struct eth_device *nic, volatile void *packet, int length)
 {
 	char *data_ptr;
 	u32 tmplen, i;
 	int tmo;
 	DM9000_DBG("eth_send: length: %d\n", length);
+
 	for (i = 0; i < length; i++) {
 		if (i % 8 == 0)
 			DM9000_DBG("\nSend: 02x: ", i);
@@ -412,26 +390,10 @@ eth_send(volatile void *packet, int length)
 }
 
 /*
-  Stop the interface.
-  The interface is stopped when it is brought.
-*/
-void
-eth_halt(void)
-{
-	DM9000_DBG("eth_halt\n");
-
-	/* RESET devie */
-	phy_write(0, 0x8000);	/* PHY RESET */
-	DM9000_iow(DM9000_GPR, 0x01);	/* Power-Down PHY */
-	DM9000_iow(DM9000_IMR, 0x80);	/* Disable all interrupt */
-	DM9000_iow(DM9000_RCR, 0x00);	/* Disable RX */
-}
-
-/*
   Received a packet and pass to upper layer
 */
 int
-eth_rx(void)
+dm9000_rcv(struct eth_device *nic)
 {
 	u8 rxbyte, *rdptr = (u8 *) NetRxPackets[0];
 	u16 RxStatus, RxLen = 0;
@@ -519,75 +481,53 @@ eth_rx(void)
 	return 0;
 }
 
-/*
-  Read a word data from SROM
-*/
-static u16
-read_srom_word(int offset)
+int dm9000_eth_init(bd_t * bd)
 {
-	DM9000_iow(DM9000_EPAR, offset);
-	DM9000_iow(DM9000_EPCR, 0x4);
-	udelay(200);
-	DM9000_iow(DM9000_EPCR, 0x0);
-	return (DM9000_ior(DM9000_EPDRL) + (DM9000_ior(DM9000_EPDRH) << 8));
+	int i, oft, lnk;
+	int mode = DM9000_AUTO;
+	
+	struct eth_device *nic = NULL;
+	DM9000_DBG("eth_init()\n");
+
+	/* RESET device */
+	dm9000_reset();
+	dm9000_probe();
+
+	/* NIC Type: FASTETHER, HOMERUN, LONGRUN */
+	identify_nic();
+
+	/* Set PHY */
+	set_PHY_mode(mode);
+
+	/* Program operating register */
+	DM9000_iow(DM9000_NCR, 0x0);	/* only intern phy supported by now */
+	DM9000_iow(DM9000_TCR, 0);	/* TX Polling clear */
+	DM9000_iow(DM9000_BPTR, 0x3f);	/* Less 3Kb, 200us */
+	DM9000_iow(DM9000_FCTR, FCTR_HWOT(3) | FCTR_LWOT(8));	/* Flow Control : High/Low Water */
+	DM9000_iow(DM9000_FCR, 0x0);	/* SH FIXME: This looks strange! Flow Control */
+	DM9000_iow(DM9000_SMCR, 0);	/* Special Mode */
+	DM9000_iow(DM9000_NSR, NSR_WAKEST | NSR_TX2END | NSR_TX1END);	/* clear TX status */
+	DM9000_iow(DM9000_ISR, 0x0f);	/* Clear interrupt status */
+
+	/* Set Node address */
+	for (i = 0, oft = 0x10; i < 6; i++, oft++)
+		DM9000_iow(oft, bd->bi_enetaddr[i]);
+	for (i = 0, oft = 0x16; i < 8; i++, oft++)
+		DM9000_iow(oft, 0xff);
+	
+	nic = (struct eth_device *) malloc(sizeof (*nic));
+	nic->priv = bd;
+//	nic->iobase = bus_to_phys(devno, iobase);
+
+	sprintf(nic->name, "DM9000");
+	nic->init   = dm9000_init;
+	nic->halt   = dm9000_halt;
+	nic->send   = dm9000_send;
+	nic->recv   = dm9000_rcv;
+		
+	eth_register(nic);
+
+	return 0;
 }
 
-/*
-   Read a byte from I/O port
-*/
-static u8
-DM9000_ior(int reg)
-{
-	DM9000_outb(reg, DM9000_IO);
-	return DM9000_inb(DM9000_DATA);
-}
-
-/*
-   Write a byte to I/O port
-*/
-static void
-DM9000_iow(int reg, u8 value)
-{
-	DM9000_outb(reg, DM9000_IO);
-	DM9000_outb(value, DM9000_DATA);
-}
-
-/*
-   Read a word from phyxcer
-*/
-static u16
-phy_read(int reg)
-{
-	u16 val;
-
-	/* Fill the phyxcer register into REG_0C */
-	DM9000_iow(DM9000_EPAR, DM9000_PHY | reg);
-	DM9000_iow(DM9000_EPCR, 0xc);	/* Issue phyxcer read command */
-	udelay(100);		/* Wait read complete */
-	DM9000_iow(DM9000_EPCR, 0x0);	/* Clear phyxcer read command */
-	val = (DM9000_ior(DM9000_EPDRH) << 8) | DM9000_ior(DM9000_EPDRL);
-
-	/* The read data keeps on REG_0D & REG_0E */
-	DM9000_DBG("phy_read(%d): %d\n", reg, val);
-	return val;
-}
-
-/*
-   Write a word to phyxcer
-*/
-static void
-phy_write(int reg, u16 value)
-{
-
-	/* Fill the phyxcer register into REG_0C */
-	DM9000_iow(DM9000_EPAR, DM9000_PHY | reg);
-
-	/* Fill the written data into REG_0D & REG_0E */
-	DM9000_iow(DM9000_EPDRL, (value & 0xff));
-	DM9000_iow(DM9000_EPDRH, ((value >> 8) & 0xff));
-	DM9000_iow(DM9000_EPCR, 0xa);	/* Issue phyxcer write command */
-	udelay(500);		/* Wait write complete */
-	DM9000_iow(DM9000_EPCR, 0x0);	/* Clear phyxcer write command */
-	DM9000_DBG("phy_write(reg:%d, value:%d)\n", reg, value);
-}
 #endif				/* CONFIG_DRIVER_DM9000 */

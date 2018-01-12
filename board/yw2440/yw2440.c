@@ -149,3 +149,12 @@ int print_cpuinfo (void)
 }
 #endif
 
+#if defined(CONFIG_DISPLAY_BOARDINFO)
+int checkboard(void)
+{
+	printf("Board: %s\n", BOARD_NAME);
+	return 0;
+}
+#endif
+
+

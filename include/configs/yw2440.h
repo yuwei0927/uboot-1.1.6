@@ -131,6 +131,8 @@
 /*#define CONFIG_BOOTFILE	"elinos-lart" */
 #define CONFIG_BOOTCOMMAND	"nand read.jffs2 0x32000000 kernel; bootm 0x32000000"
 
+#define CONFIG_NET_MULTI	1	/* Multi ethernet cards support */
+
 #if (CONFIG_COMMANDS & CFG_CMD_KGDB)
 #define CONFIG_KGDB_BAUDRATE	115200		/* speed to run kgdb serial port */
 /* what's this ? it's not used anywhere */
@@ -244,4 +246,10 @@
 //#define CONFIG_LCD_N35		1
 
 #define CONFIG_DISPLAY_CPUINFO	1
+#define	CONFIG_DISPLAY_BOARDINFO	1
+
+#ifdef CONFIG_DISPLAY_BOARDINFO
+#define BOARD_NAME	"YW2440"
+#endif
+
 #endif	/* __CONFIG_H */

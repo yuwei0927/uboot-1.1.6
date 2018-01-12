@@ -371,7 +371,7 @@ void start_armboot (void)
 
 	Port_Init();  
 
-#if 0  
+#if (CONFIG_COMMANDS & CFG_CMD_USB)  
 	printf ("YuWei: PreLoadedONRAM = %08lx\n", PreLoadedONRAM);
 	if (!PreLoadedONRAM) {
 		/* enable exceptions */

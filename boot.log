@@ -1,6 +1,6 @@
-U-Boot 1.1.6.YuWei-g1b7a5bf7-dirty (Jan  7 2018 - 19:39:43)
+U-Boot 1.1.6.YuWei-ge78f9713-dirty (Jan 13 2018 - 01:25:47)
 
-U-Boot code: 33F80000 -> 33FAC93C  BSS: -> 33FB434C
+U-Boot code: 33F80000 -> 33FAD168  BSS: -> 33FB4B90
 IRQ Stack: 33f4ff7c
 FIQ Stack: 33f4ef7c
 Chip ID:0x32440001
@@ -14,9 +14,10 @@ UPLLVal [M:38h,P:2h,S:2h]
 MPLLVal [M:5ch,P:1h,S:1h]
 CLKDIVN: 5h
 +---------------------------------------------+
+Board: YW2440
 RAM Configuration:
 Bank #0: 30000000 64 MB
-flash_protect ON: from 0x00000000 to 0x0002C93B
+flash_protect ON: from 0x00000000 to 0x0002D167
 protect on 0
 protect on 1
 protect on 2
@@ -62,6 +63,7 @@ protect on 41
 protect on 42
 protect on 43
 protect on 44
+protect on 45
 flash_protect ON: from 0x00070000 to 0x0007FFFF
 protect on 112
 protect on 113
@@ -86,6 +88,7 @@ env_relocate[222] malloced ENV at 33f50428
 In:    serial
 Out:   serial
 Err:   serial
+Net:   DM9000
 ### main_loop entered: bootdelay=3
 
 ### main_loop: bootcmd="nand read.jffs2 0x32000000 kernel; bootm 0x32000000"
@@ -110,4 +113,14 @@ Bad Magic Number
 [s] Set the boot parameters
 [r] Reboot u-boot
 [q] Quit from menu
-Enter your selection: 
+Enter your selection: q
+YW2440> tftp 30008000 u-boot.bin   
+Trying DM9000
+Using DM9000 device
+TFTP from server 172.17.1.110; our IP address is 172.17.1.150
+Filename 'u-boot.bin'.
+Load address: 0x30008000
+Loading: T #####################################
+done
+Bytes transferred = 184680 (2d168 hex)
+YW2440> 
