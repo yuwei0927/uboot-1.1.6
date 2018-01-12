@@ -252,4 +252,9 @@
 #define BOARD_NAME	"YW2440"
 #endif
 
+#if (CONFIG_COMMANDS & CFG_CMD_USB)
+#define	CONFIG_CMD_MENU			1
+#endif
+
+
 #endif	/* __CONFIG_H */

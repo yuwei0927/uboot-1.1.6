@@ -486,7 +486,9 @@ void main_loop (void)
 	}
 #endif
 
+#ifdef CONFIG_CMD_MENU
     run_command("menu", 0);
+#endif
 	/*
 	 * Main Loop for Monitor Command Processing
 	 */

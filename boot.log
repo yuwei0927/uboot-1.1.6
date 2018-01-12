@@ -1,4 +1,5 @@
-U-Boot 1.1.6.YuWei-ge78f9713-dirty (Jan 13 2018 - 01:25:47)
+
+U-Boot 1.1.6.YuWei-g2fd758f7-dirty (Jan 13 2018 - 02:10:19)
 
 U-Boot code: 33F80000 -> 33FAD168  BSS: -> 33FB4B90
 IRQ Stack: 33f4ff7c
@@ -101,26 +102,4 @@ Reading data from 0x1ffe00 -- 100% complete.
  2097152 bytes read: OK
 ## Booting image at 32000000 ...
 Bad Magic Number
-
-##### open24x0 Bootloader for FA24x0 #####
-[u] Download u-boot
-[k] Download Linux kernel
-[j] Download JFFS2 image
-[y] Download YAFFS image
-[d] Download to SDRAM & Run
-[b] Boot the system
-[f] Format the Nand Flash
-[s] Set the boot parameters
-[r] Reboot u-boot
-[q] Quit from menu
-Enter your selection: q
-YW2440> tftp 30008000 u-boot.bin   
-Trying DM9000
-Using DM9000 device
-TFTP from server 172.17.1.110; our IP address is 172.17.1.150
-Filename 'u-boot.bin'.
-Load address: 0x30008000
-Loading: T #####################################
-done
-Bytes transferred = 184680 (2d168 hex)
 YW2440> 
