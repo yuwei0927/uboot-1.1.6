@@ -1,9 +1,5 @@
+U-Boot 1.1.6.YuWei-gf798aab2-dirty (Jan 17 2018 - 22:42:39)
 
-U-Boot 1.1.6.YuWei-g2fd758f7-dirty (Jan 13 2018 - 02:10:19)
-
-U-Boot code: 33F80000 -> 33FAD168  BSS: -> 33FB4B90
-IRQ Stack: 33f4ff7c
-FIQ Stack: 33f4ef7c
 Chip ID:0x32440001
 This CPU chip is S3C2440
 +---------------------------------------------+
@@ -16,72 +12,7 @@ MPLLVal [M:5ch,P:1h,S:1h]
 CLKDIVN: 5h
 +---------------------------------------------+
 Board: YW2440
-RAM Configuration:
-Bank #0: 30000000 64 MB
-flash_protect ON: from 0x00000000 to 0x0002D167
-protect on 0
-protect on 1
-protect on 2
-protect on 3
-protect on 4
-protect on 5
-protect on 6
-protect on 7
-protect on 8
-protect on 9
-protect on 10
-protect on 11
-protect on 12
-protect on 13
-protect on 14
-protect on 15
-protect on 16
-protect on 17
-protect on 18
-protect on 19
-protect on 20
-protect on 21
-protect on 22
-protect on 23
-protect on 24
-protect on 25
-protect on 26
-protect on 27
-protect on 28
-protect on 29
-protect on 30
-protect on 31
-protect on 32
-protect on 33
-protect on 34
-protect on 35
-protect on 36
-protect on 37
-protect on 38
-protect on 39
-protect on 40
-protect on 41
-protect on 42
-protect on 43
-protect on 44
-protect on 45
-flash_protect ON: from 0x00070000 to 0x0007FFFF
-protect on 112
-protect on 113
-protect on 114
-protect on 115
-protect on 116
-protect on 117
-protect on 118
-protect on 119
-protect on 120
-protect on 121
-protect on 122
-protect on 123
-protect on 124
-protect on 125
-protect on 126
-protect on 127
+DRAM:  64 MB
 Flash:  2 MB
 NAND:  64 MiB
 env_relocate[204] offset = 0x0
@@ -90,9 +21,6 @@ In:    serial
 Out:   serial
 Err:   serial
 Net:   DM9000
-### main_loop entered: bootdelay=3
-
-### main_loop: bootcmd="nand read.jffs2 0x32000000 kernel; bootm 0x32000000"
 Hit any key to stop autoboot:  0 
 Booting Linux ...
 
@@ -102,4 +30,6 @@ Reading data from 0x1ffe00 -- 100% complete.
  2097152 bytes read: OK
 ## Booting image at 32000000 ...
 Bad Magic Number
-YW2440> 
+YW2440> flread 27
+
+addr 0x27 = 0x15

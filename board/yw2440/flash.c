@@ -28,35 +28,36 @@ ulong myflush (void);
 
 
 #define FLASH_BANK_SIZE	PHYS_FLASH_SIZE
-#if defined(CONFIG_SST_39VF1601)
-#define MAIN_SECT_SIZE  0x1000	/* 4 KByte/sector */
-#else
-#define MAIN_SECT_SIZE  0x10000	/* 64 KB */
-#endif 
+
+#ifndef MAIN_SECT_SIZE
+#define MAIN_SECT_SIZE  0x10000	/* 64 KByte/sector */
+#endif
 
 flash_info_t flash_info[CFG_MAX_FLASH_BANKS];
 
 
 #define CMD_READ_ARRAY		0x000000F0
-#define CMD_UNLOCK1		0x000000AA
-#define CMD_UNLOCK2		0x00000055
+#define CMD_UNLOCK1			0x000000AA
+#define CMD_UNLOCK2			0x00000055
 #define CMD_ERASE_SETUP		0x00000080
-#define CMD_ERASE_CONFIRM	0x00000030
-#define CMD_PROGRAM		0x000000A0
+#define CMD_ERASE_SECTOR	0x00000030
+#define CMD_ERASE_BLOCK		0x00000050
+#define CMD_ERASE_CHIP		0x00000010
+#define CMD_PROGRAM			0x000000A0
 #define CMD_UNLOCK_BYPASS	0x00000020
+#define CMD_QUERY_ID		0x00000088
+#define CMD_PRODUCT_ID		0x00000090
+#define CMD_CFI_ENTRY		0x00000098
+#define CMD_CFI_EXIT		0x000000F0
 
-#ifdef  CONFIG_SST_39VF1601
+
 #define MEM_FLASH_ADDR1		(*(volatile u16 *)(CFG_FLASH_BASE + (0x000005555 << 1)))
 #define MEM_FLASH_ADDR2		(*(volatile u16 *)(CFG_FLASH_BASE + (0x000002AAA << 1)))
-#else
-#define MEM_FLASH_ADDR1		(*(volatile u16 *)(CFG_FLASH_BASE + (0x00000555 << 1)))
-#define MEM_FLASH_ADDR2		(*(volatile u16 *)(CFG_FLASH_BASE + (0x000002AA << 1)))
-#endif
 
 #define BIT_ERASE_DONE		0x00000080
 #define BIT_RDY_MASK		0x00000080
 #define BIT_PROGRAM_ERROR	0x00000020
-#define BIT_TIMEOUT		0x80000000	/* our flag */
+#define BIT_TIMEOUT			0x80000000	/* our flag */
 
 #define READY 1
 #define ERR   2
@@ -74,13 +75,7 @@ ulong flash_init (void)
 		ulong flashbase = 0;
 
 		flash_info[i].flash_id =
-#if defined(CONFIG_AMD_LV400)
-			(AMD_MANUFACT & FLASH_VENDMASK) |
-			(AMD_ID_LV400B & FLASH_TYPEMASK);
-#elif defined(CONFIG_AMD_LV800)
-			(AMD_MANUFACT & FLASH_VENDMASK) |
-			(AMD_ID_LV800B & FLASH_TYPEMASK);
-#elif defined(CONFIG_SST_39VF1601)
+#if defined(CONFIG_SST_39VF1601)
 			(SST_MANUFACT & FLASH_VENDMASK) |
 			(SST_ID_xF1601 & FLASH_TYPEMASK);
 #else
@@ -94,32 +89,7 @@ ulong flash_init (void)
 		else
 			panic ("configured too many flash banks!\n");
 		for (j = 0; j < flash_info[i].sector_count; j++) {
-#ifndef CONFIG_SST_39VF1601
-			if (j <= 3) {
-				/* 1st one is 16 KB */
-				if (j == 0) {
-					flash_info[i].start[j] =
-						flashbase + 0;
-				}
-
-				/* 2nd and 3rd are both 8 KB */
-				if ((j == 1) || (j == 2)) {
-					flash_info[i].start[j] =
-						flashbase + 0x4000 + (j -
-								      1) *
-						0x2000;
-				}
-
-				/* 4th 32 KB */
-				if (j == 3) {
-					flash_info[i].start[j] =
-						flashbase + 0x8000;
-				}
-			} else {
-				flash_info[i].start[j] =
-					flashbase + (j - 3) * MAIN_SECT_SIZE;
-			}
-#else		
+#ifdef CONFIG_SST_39VF1601		
 			flash_info[i].start[j] =
 				flashbase + (j) * MAIN_SECT_SIZE;
 #endif
@@ -139,6 +109,49 @@ ulong flash_init (void)
 	return size;
 }
 
+
+static ushort flash_read_ushort (uint offset)
+{
+	uchar *addr;
+	vu_short retval;
+
+	MEM_FLASH_ADDR1 = CMD_UNLOCK1;
+	
+	/* arm simple, non interrupt dependent timer */
+	reset_timer_masked ();
+	//udelay(10);
+	MEM_FLASH_ADDR2 = CMD_UNLOCK2;
+	
+	/* arm simple, non interrupt dependent timer */
+	reset_timer_masked ();
+	//udelay(10);
+	MEM_FLASH_ADDR1 = CMD_CFI_ENTRY;
+	//udelay(100);
+	/* arm simple, non interrupt dependent timer */
+	reset_timer_masked ();
+
+	while (1)
+	{
+
+		if ((*addr & 0x40) != (*addr & 0x40)) 
+			continue; 
+		if (*addr & 0x80)
+			break;
+	}
+	retval = (*(volatile u16 *)(CFG_FLASH_BASE + (offset << 1)));
+
+	MEM_FLASH_ADDR1 = CMD_UNLOCK1;
+	MEM_FLASH_ADDR2 = CMD_UNLOCK2;
+	MEM_FLASH_ADDR1 = CMD_CFI_EXIT;
+
+	return retval;
+}
+
+ushort flash_read(flash_info_t * info, ulong dest)
+{
+	return flash_read_ushort (dest);
+}
+
 /*-----------------------------------------------------------------------
  */
 void flash_print_info (flash_info_t * info)
@@ -148,6 +161,9 @@ void flash_print_info (flash_info_t * info)
 	switch (info->flash_id & FLASH_VENDMASK) {
 	case (AMD_MANUFACT & FLASH_VENDMASK):
 		printf ("AMD: ");
+		break;
+	case (SST_MANUFACT & FLASH_VENDMASK):
+		printf ("SST: ");
 		break;
 	default:
 		printf ("Unknown Vendor ");
@@ -160,6 +176,9 @@ void flash_print_info (flash_info_t * info)
 		break;
 	case (AMD_ID_LV800B & FLASH_TYPEMASK):
 		printf ("1x Amd29LV800BB (8Mbit)\n");
+		break;
+	case (SST_ID_xF1601 & FLASH_TYPEMASK):
+		printf ("1x SST39xF1601 (16Mbit)\n");
 		break;
 	default:
 		printf ("Unknown Chip Type\n");
@@ -183,15 +202,16 @@ void flash_print_info (flash_info_t * info)
       Done:;
 }
 
+
 /*-----------------------------------------------------------------------
  */
 
 int flash_erase (flash_info_t * info, int s_first, int s_last)
 {
-	ushort result;
+	//ushort result;
 	int iflag, cflag, prot, sect;
 	int rc = ERR_OK;
-	int chip;
+	//int chip;
 
 	/* first look for protection bits */
 
@@ -202,10 +222,12 @@ int flash_erase (flash_info_t * info, int s_first, int s_last)
 		return ERR_INVAL;
 	}
 
+#ifdef CONFIG_SST_39VF1601
 	if ((info->flash_id & FLASH_VENDMASK) !=
-	    (AMD_MANUFACT & FLASH_VENDMASK)) {
+		(SST_MANUFACT & FLASH_VENDMASK)) {
 		return ERR_UNKNOWN_FLASH_VENDOR;
 	}
+#endif
 
 	prot = 0;
 	for (sect = s_first; sect <= s_last; ++sect) {
@@ -243,50 +265,25 @@ int flash_erase (flash_info_t * info, int s_first, int s_last)
 
 			MEM_FLASH_ADDR1 = CMD_UNLOCK1;
 			MEM_FLASH_ADDR2 = CMD_UNLOCK2;
-			*addr = CMD_ERASE_CONFIRM;
+			*addr = CMD_ERASE_SECTOR;
 
+#ifdef CONFIG_SST_39VF1601
 			/* wait until flash is ready */
-			chip = 0;
-
-			do {
-				result = *addr;
-
-				/* check timeout */
-				if (get_timer_masked () >
-				    CFG_FLASH_ERASE_TOUT) {
-					MEM_FLASH_ADDR1 = CMD_READ_ARRAY;
-					chip = TMO;
+			while(1){
+				unsigned short i;
+				i = *((volatile unsigned short *)addr) & 0x40;
+				if(i != (*((volatile unsigned short *)addr) & 0x40))
+					continue;
+				if((*((volatile unsigned short *)addr)) & 0x80)
 					break;
-				}
-
-				if (!chip
-				    && (result & 0xFFFF) & BIT_ERASE_DONE)
-					chip = READY;
-
-				if (!chip
-				    && (result & 0xFFFF) & BIT_PROGRAM_ERROR)
-					chip = ERR;
-
-			} while (!chip);
-
-			MEM_FLASH_ADDR1 = CMD_READ_ARRAY;
-
-			if (chip == ERR) {
-				rc = ERR_PROG_ERROR;
-				goto outahere;
 			}
-			if (chip == TMO) {
-				rc = ERR_TIMOUT;
-				goto outahere;
-			}
-
 			printf ("ok.\n");
-		} else {	/* it was protected */
 
-			printf ("protected!\n");
+		} else {   /* it was protected */
+		printf ("protected!\n");
 		}
 	}
-
+#endif
 	if (ctrlc ())
 		printf ("User Interrupt!\n");
 
@@ -336,42 +333,24 @@ volatile static int write_hword (flash_info_t * info, ulong dest, ushort data)
 
 	MEM_FLASH_ADDR1 = CMD_UNLOCK1;
 	MEM_FLASH_ADDR2 = CMD_UNLOCK2;
-	MEM_FLASH_ADDR1 = CMD_UNLOCK_BYPASS;
-	*addr = CMD_PROGRAM;
+//	MEM_FLASH_ADDR1 = CMD_UNLOCK_BYPASS;
+	MEM_FLASH_ADDR1 = CMD_PROGRAM;
 	*addr = data;
 
 	/* arm simple, non interrupt dependent timer */
 	reset_timer_masked ();
-
+#ifdef CONFIG_SST_39VF1601
 	/* wait until flash is ready */
-	chip = 0;
-	do {
-		result = *addr;
-
-		/* check timeout */
-		if (get_timer_masked () > CFG_FLASH_ERASE_TOUT) {
-			chip = ERR | TMO;
-			break;
+	while(1){
+		unsigned short i = *(volatile unsigned short *)addr & 0x40;
+		if(i != (*(volatile unsigned short *)addr & 0x40))   //D6 == D6
+			continue;
+		if((*(volatile unsigned short *)addr & 0x80) == (data & 0x80)){
+			rc = ERR_OK;
+			break;     //D7 == D7
 		}
-		if (!chip && ((result & 0x80) == (data & 0x80)))
-			chip = READY;
-
-		if (!chip && ((result & 0xFFFF) & BIT_PROGRAM_ERROR)) {
-			result = *addr;
-
-			if ((result & 0x80) == (data & 0x80))
-				chip = READY;
-			else
-				chip = ERR;
-		}
-
-	} while (!chip);
-
-	*addr = CMD_READ_ARRAY;
-
-	if (chip == ERR || *addr != data)
-		rc = ERR_PROG_ERROR;
-
+	}
+#endif
 	if (iflag)
 		enable_interrupts ();
 

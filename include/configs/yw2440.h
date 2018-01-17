@@ -122,7 +122,7 @@
 /* this must be included AFTER the definition of CONFIG_COMMANDS (if any) */
 #include <cmd_confdefs.h>
 
-#define CONFIG_BOOTDELAY	3
+#define CONFIG_BOOTDELAY	1
 #define CONFIG_BOOTARGS    	"noinitrd root=/dev/mtdblock2 init=/linuxrc console=ttySAC0"
 #define CONFIG_ETHADDR	    08:00:3e:26:0a:5b
 #define CONFIG_NETMASK      255.255.0.0
@@ -191,30 +191,18 @@
  * FLASH and environment organization
  */
 
-//#define CONFIG_AMD_LV400	0	/* uncomment this if you have a LV400 flash */
-//#define CONFIG_AMD_LV800	0	/* uncomment this if you have a LV800 flash */
 #define CONFIG_SST_39VF1601	1	/* uncomment this if you have a SST 39VF1601 flash */
 
 
 #define CFG_MAX_FLASH_BANKS	1	/* max number of memory banks */
-#ifdef CONFIG_AMD_LV800
-#define PHYS_FLASH_SIZE		0x00100000 /* 1MB */
-#define CFG_MAX_FLASH_SECT	(19)	/* max number of sectors on one chip */
-#define CFG_ENV_ADDR		(CFG_FLASH_BASE + 0x0F0000) /* addr of environment */
-#endif
-
-#ifdef CONFIG_AMD_LV400
-#define PHYS_FLASH_SIZE		0x00080000 /* 512KB */
-#define CFG_MAX_FLASH_SECT	(11)	/* max number of sectors on one chip */
-#define CFG_ENV_ADDR		(CFG_FLASH_BASE + 0x070000) /* addr of environment */
-#endif
 
 #ifdef CONFIG_SST_39VF1601
 #define PHYS_FLASH_SIZE		0x00200000 /* 2MB */
 #define CFG_MAX_FLASH_SECT	(512)	/* max number of sectors on one chip, 512 sectors */
-#define CFG_ENV_ADDR		(CFG_FLASH_BASE + 0x070000) /* addr of environment */
+//根据SST39VF1601的芯片手册描述，对其进行操作有两种方式：块方式和扇区方式。现采用扇区方式(sector)，1 sector = 2Kword = 4Kbyte，所以2M的Nor Flash共有512个sector
+#define CFG_ENV_ADDR		(CFG_FLASH_BASE + 0x100000) /* addr of environment */
+#define MAIN_SECT_SIZE		0x1000	/* 4 KByte/sector */
 #endif
-
 
 /* timeout values are in ticks */
 #define CFG_FLASH_ERASE_TOUT	(5*CFG_HZ) /* Timeout for Flash Erase */
